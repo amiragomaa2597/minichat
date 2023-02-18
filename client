@@ -1,0 +1,88 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Net;
+using System.Net.Sockets;
+using System.IO;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Runtime.InteropServices.ComTypes;
+
+namespace chat_lab12
+{
+    public partial class client : Form
+    {
+        byte[] bt;
+        IPAddress serverAddress;
+        int serverPort;
+        TcpClient client1;
+        NetworkStream stream;
+        BinaryWriter bw;
+        BinaryReader br;
+       
+        public client()
+        {
+            InitializeComponent();
+           
+            button2.Enabled = false;
+            bt = new byte[] { 127, 0, 0, 1 };
+            serverAddress = new IPAddress(bt);
+            serverPort = 3300;
+            client1 = new TcpClient();
+            timer1.Enabled = false; 
+        }
+
+        private void connect_Click(object sender, EventArgs e)
+        {
+            
+            client1.Connect(serverAddress, serverPort);
+            stream = client1.GetStream();
+            connected_label.Text = "connected";
+           
+            button2.Enabled = true;
+            br = new BinaryReader(stream);
+            timer1.Enabled = true;
+
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            bw = new BinaryWriter(stream);
+            bw.Write(textBox5.Text);
+            string send_msg = "client :" + textBox5.Text;
+            listBox1.Items.Add(send_msg);
+            textBox5.Text = "";
+        }
+
+       
+        private void disconnect_Click(object sender, EventArgs e)
+        {
+            br.Close();
+            bw.Close();
+            stream.Close();
+            connected_label.Text = "Disconnected";
+           
+            button2.Enabled = false;
+            timer1.Enabled= false;
+        }
+
+       
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (stream.DataAvailable)
+            {
+                br = new BinaryReader(stream);
+                string recieved_msg = "server :" + br.ReadString();
+                listBox1.Items.Add(recieved_msg);
+            }
+        }
+
+      
+    }
+}

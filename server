@@ -1,0 +1,96 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Net;
+using System.Net.Sockets;
+using System.IO;
+using System.Runtime.InteropServices.ComTypes;
+using System.Net.Configuration;
+using System.Threading;
+
+namespace serverlab12
+{
+    public partial class server : Form
+    {
+        TcpListener server1 ;
+        byte[] bt;
+        IPAddress localaddr;
+        int port = 3300;
+        Socket connection;
+        NetworkStream nStream;
+        BinaryWriter bw;
+        BinaryReader br;
+        public server()
+        {
+            InitializeComponent();
+            bt = new byte[] { 127, 0, 0, 1 };
+            localaddr = new IPAddress(bt);
+            server1 = new TcpListener(localaddr, port);
+            send_btn.Enabled = false;
+          
+            timer1.Enabled = false;
+            
+
+        }
+
+        private void End_btn_Click(object sender, EventArgs e)
+        {
+           
+            bw.Close();
+            nStream.Close();
+            connection.Shutdown(SocketShutdown.Both);
+            connection.Close();
+            status_lab.Text = "closed";
+            send_btn.Enabled = false;
+           
+
+        }
+
+        private void send_btn_Click(object sender, EventArgs e)
+        {
+            bw = new BinaryWriter(nStream);
+            bw.Write(textBox1.Text);
+            string send_msg = "server :" + textBox1.Text; 
+            listBox1.Items.Add(send_msg);
+            textBox1.Text = "";
+        }
+
+        private void start_btn_Click(object sender, EventArgs e)
+        {
+
+            MessageBox.Show("started");
+            
+            server1.Start();
+            connection = server1.AcceptSocket();
+            nStream = new NetworkStream(connection);
+         
+            status_lab.Text = "started";
+           
+            send_btn.Enabled = true;
+            timer1.Enabled=true;
+          
+        }
+        public virtual bool DataAvailable { get; }
+
+        
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+          
+            if (nStream.DataAvailable)
+            {
+                br = new BinaryReader(nStream);
+                string recieved_msg = "client :" + br.ReadString();
+                listBox1.Items.Add(recieved_msg);
+            }
+        }
+
+       
+    }
+}
